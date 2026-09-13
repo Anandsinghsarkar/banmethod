@@ -1,39 +1,46 @@
-# CaseDesk — Complaint Case Manager
+# GroupGuard — Telegram Group Moderation Bot
 
-A small Flask + SQLite app for manually organizing complaint cases and preparing a text draft for submission through a platform's official process. It does **not** send reports, contact platforms, scrape accounts, or automate bans/enforcement.
+A small Telegram bot for moderation in groups where you are an authorized admin. It does not mass-report accounts or act on accounts outside your group.
 
 ## Features
 
-- Password-protected single-admin login
-- Add, search, and filter cases
-- Categories and status tracking
-- Optional public reference URL
-- Export a plain-text complaint draft
-- SQLite persistence, CSRF protection, and bounded input sizes
+- `/start` — help menu and command list
+- `/ban` — reply to a member's message to ban them
+- `/unban USER_ID` — unban by numeric Telegram user ID
+- `/mute [minutes]` — reply to a member; default 10 minutes (maximum 7 days)
+- `/unmute` — reply to a member to restore send permissions
+- `/warn` — reply to a member to issue a warning
+- `/warnings` — check your warnings; admins can reply to check another member
+- `/rules` and `/setrules TEXT` — view/set group rules
+- Bot command menu is registered automatically at startup
 
-## Run locally / Termux
+Warnings and custom rules are stored in memory and reset when the bot restarts.
 
-Python 3.10+ is recommended.
+## Run in Termux
+
+1. Create a bot with [@BotFather](https://t.me/BotFather) and copy its token. Never publish the token.
+2. Add the bot to your Telegram group and grant only the permissions it needs: **Ban users** and **Restrict members**. Promote yourself as a group admin.
+3. Install and run:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+pkg update -y
+pkg install python git -y
+git clone https://github.com/Anandsinghsarkar/banmethod.git
+cd banmethod
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-export ADMIN_PASSWORD='choose-a-strong-password'
-export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
-export DATABASE_PATH="$PWD/cases.db"
-gunicorn --bind 127.0.0.1:5000 main:app
+export BOT_TOKEN='PASTE_YOUR_BOT_TOKEN_HERE'
+python main.py
 ```
 
-Open <http://127.0.0.1:5000>. Do not expose the development app publicly without HTTPS, a strong secret, secure deployment configuration, and persistent storage. Set `ADMIN_PASSWORD` and `SECRET_KEY` in your hosting provider's environment settings; never commit real secrets.
+Keep the Termux session running while you want the bot online. Use `Ctrl+C` to stop it.
 
-## Render
+## Usage
 
-- Build command: `pip install -r requirements.txt`
-- Start command: `gunicorn --bind 0.0.0.0:$PORT main:app`
-- Set `ADMIN_PASSWORD` and `SECRET_KEY` as environment variables.
-- For persistent SQLite data, attach a persistent disk and set `DATABASE_PATH` to a file path on that disk, for example `/var/data/cases.db`.
+In your group, reply to a member's message with `/ban`, `/mute`, `/mute 30`, `/unmute`, or `/warn`. Use `/unban 123456789` with the user's numeric ID. `/setrules Be respectful; no spam` sets the group's rules.
 
-## Important
+## Notes
 
-This is a basic private case tracker, not a legal service or a platform enforcement tool. Submit complaints yourself, truthfully, and only when appropriate. Avoid storing passwords, private messages, or unnecessary personal data in case notes.
+- Commands that change membership are admin-only and depend on Telegram bot permissions.
+- Telegram does not allow bots to ban group admins; the bot must have adequate permissions.
+- This is a basic starter bot, not a persistent database-backed moderation system.
